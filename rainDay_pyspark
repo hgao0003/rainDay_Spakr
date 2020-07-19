@@ -1,0 +1,1187 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Creating Spark Session and Loading the Data\n",
+    "#### studnet name : Han Gao\n",
+    "#### student ID :28051955\n",
+    "#### Step 1 :import spark session and initialize spark"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# import pakcage\n",
+    "from pyspark.sql import SparkSession \n",
+    "from pyspark import SparkContext, SparkConf\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# create the sparksession \n",
+    "\n",
+    "spark=SparkSession\\\n",
+    ".builder\\\n",
+    ".master(\"local[4]\")\\\n",
+    ".appName(\"Assignment two\")\\\n",
+    ".config(\"spark.some.confug.option\",\"some-value\")\\\n",
+    ".getOrCreate()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "            <div>\n",
+       "                <p><b>SparkSession - in-memory</b></p>\n",
+       "                \n",
+       "        <div>\n",
+       "            <p><b>SparkContext</b></p>\n",
+       "\n",
+       "            <p><a href=\"http://ip-10-27-163-14:4040\">Spark UI</a></p>\n",
+       "\n",
+       "            <dl>\n",
+       "              <dt>Version</dt>\n",
+       "                <dd><code>v2.4.3</code></dd>\n",
+       "              <dt>Master</dt>\n",
+       "                <dd><code>local[4]</code></dd>\n",
+       "              <dt>AppName</dt>\n",
+       "                <dd><code>Assignment two</code></dd>\n",
+       "            </dl>\n",
+       "        </div>\n",
+       "        \n",
+       "            </div>\n",
+       "        "
+      ],
+      "text/plain": [
+       "<pyspark.sql.session.SparkSession at 0x7f56ad287ba8>"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "spark"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### step 2: load the dataset and print the schema and total number of entries\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "rain_dataset_string=spark.read.csv(\"weatherAUS.csv\",header =True,inferSchema =True) "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "root\n",
+      " |-- Date: timestamp (nullable = true)\n",
+      " |-- Location: string (nullable = true)\n",
+      " |-- MinTemp: string (nullable = true)\n",
+      " |-- MaxTemp: string (nullable = true)\n",
+      " |-- Rainfall: string (nullable = true)\n",
+      " |-- Evaporation: string (nullable = true)\n",
+      " |-- Sunshine: string (nullable = true)\n",
+      " |-- WindGustDir: string (nullable = true)\n",
+      " |-- WindGustSpeed: string (nullable = true)\n",
+      " |-- WindDir9am: string (nullable = true)\n",
+      " |-- WindDir3pm: string (nullable = true)\n",
+      " |-- WindSpeed9am: string (nullable = true)\n",
+      " |-- WindSpeed3pm: string (nullable = true)\n",
+      " |-- Humidity9am: string (nullable = true)\n",
+      " |-- Humidity3pm: string (nullable = true)\n",
+      " |-- Pressure9am: string (nullable = true)\n",
+      " |-- Pressure3pm: string (nullable = true)\n",
+      " |-- Cloud9am: string (nullable = true)\n",
+      " |-- Cloud3pm: string (nullable = true)\n",
+      " |-- Temp9am: string (nullable = true)\n",
+      " |-- Temp3pm: string (nullable = true)\n",
+      " |-- RainToday: string (nullable = true)\n",
+      " |-- RainTomorrow: string (nullable = true)\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "rain_dataset_string.printSchema()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "the total entries is 142193\n"
+     ]
+    }
+   ],
+   "source": [
+    "# show the total number of entries in the dataset\n",
+    "total_number=rain_dataset_string.count()\n",
+    "print(\"the total entries is \"+str(total_number))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Part B Data cleaning and processing "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### step 03: Delete columns from the dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#drop columns\n",
+    "dele_column=[\"Date\",\"Location\",\"Evaporation\",\"Sunshine\",\"Cloud9am\",\"Cloud3pm\",\"Temp9am\",\"Temp3pm\"]\n",
+    "drop_finish=rain_dataset_string.drop(\"Date\",\"Location\",\"Evaporation\",\"Sunshine\",\"Cloud9am\",\"Cloud3pm\",\"Temp9am\",\"Temp3pm\")\n",
+    "#dropName is the columns name of dropped dataset\n",
+    "dropNmae=drop_finish.columns"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The reason why i need to delete a lots of columns because these columns have a great amount missing value, these missing value would cause that the accuracy is low. the model cannot make a good prediction."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "root\n",
+      " |-- MinTemp: string (nullable = true)\n",
+      " |-- MaxTemp: string (nullable = true)\n",
+      " |-- Rainfall: string (nullable = true)\n",
+      " |-- WindGustDir: string (nullable = true)\n",
+      " |-- WindGustSpeed: string (nullable = true)\n",
+      " |-- WindDir9am: string (nullable = true)\n",
+      " |-- WindDir3pm: string (nullable = true)\n",
+      " |-- WindSpeed9am: string (nullable = true)\n",
+      " |-- WindSpeed3pm: string (nullable = true)\n",
+      " |-- Humidity9am: string (nullable = true)\n",
+      " |-- Humidity3pm: string (nullable = true)\n",
+      " |-- Pressure9am: string (nullable = true)\n",
+      " |-- Pressure3pm: string (nullable = true)\n",
+      " |-- RainToday: string (nullable = true)\n",
+      " |-- RainTomorrow: string (nullable = true)\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "# print the schema of dataset that is dropped the some columns\n",
+    "drop_finish.printSchema()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### step 04: Print the number of missing data in each column"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "MinTemp have 637 missing value \n",
+      "MaxTemp have 322 missing value \n",
+      "Rainfall have 1406 missing value \n",
+      "WindGustDir have 9330 missing value \n",
+      "WindGustSpeed have 9270 missing value \n",
+      "WindDir9am have 10013 missing value \n",
+      "WindDir3pm have 3778 missing value \n",
+      "WindSpeed9am have 1348 missing value \n",
+      "WindSpeed3pm have 2630 missing value \n",
+      "Humidity9am have 1774 missing value \n",
+      "Humidity3pm have 3610 missing value \n",
+      "Pressure9am have 14014 missing value \n",
+      "Pressure3pm have 13981 missing value \n",
+      "RainToday have 1406 missing value \n",
+      "RainTomorrow have 0 missing value \n"
+     ]
+    }
+   ],
+   "source": [
+    "from pyspark.sql.functions import *\n",
+    "# this function for calculate the missing value\n",
+    "def calculateMissingValue():\n",
+    "    for i in dropNmae:\n",
+    "        counts=rain_dataset_string.select(i).filter(rain_dataset_string[i]==\"NA\").count()\n",
+    "        print(str(i)+\" have \"+str(counts)+\" missing value \")\n",
+    "calculateMissingValue()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### step 05: fill the missing  data with average value and maximum occurence value "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [],
+   "source": [
+    "# import all of necessary packages\n",
+    "from pyspark.sql.functions import * \n",
+    "from pyspark.sql.functions import UserDefinedFunction\n",
+    "from pyspark.sql.types import *\n",
+    "import re\n",
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-RECORD 0---------------\n",
+      " MinTemp       | 13.4   \n",
+      " MaxTemp       | 22.9   \n",
+      " Rainfall      | 0.6    \n",
+      " WindGustSpeed | 44     \n",
+      " WindSpeed9am  | 20     \n",
+      " WindSpeed3pm  | 24     \n",
+      " Humidity9am   | 71     \n",
+      " Humidity3pm   | 22     \n",
+      " Pressure9am   | 1007.7 \n",
+      " Pressure3pm   | 1007.1 \n",
+      " WindGustDir   | W      \n",
+      " WindDir9am    | W      \n",
+      " WindDir3pm    | WNW    \n",
+      " RainToday     | No     \n",
+      " RainTomorrow  | No     \n",
+      "-RECORD 1---------------\n",
+      " MinTemp       | 7.4    \n",
+      " MaxTemp       | 25.1   \n",
+      " Rainfall      | 0      \n",
+      " WindGustSpeed | 44     \n",
+      " WindSpeed9am  | 4      \n",
+      " WindSpeed3pm  | 22     \n",
+      " Humidity9am   | 44     \n",
+      " Humidity3pm   | 25     \n",
+      " Pressure9am   | 1010.6 \n",
+      " Pressure3pm   | 1007.8 \n",
+      " WindGustDir   | WNW    \n",
+      " WindDir9am    | NNW    \n",
+      " WindDir3pm    | WSW    \n",
+      " RainToday     | No     \n",
+      " RainTomorrow  | No     \n",
+      "-RECORD 2---------------\n",
+      " MinTemp       | 12.9   \n",
+      " MaxTemp       | 25.7   \n",
+      " Rainfall      | 0      \n",
+      " WindGustSpeed | 46     \n",
+      " WindSpeed9am  | 19     \n",
+      " WindSpeed3pm  | 26     \n",
+      " Humidity9am   | 38     \n",
+      " Humidity3pm   | 30     \n",
+      " Pressure9am   | 1007.6 \n",
+      " Pressure3pm   | 1008.7 \n",
+      " WindGustDir   | WSW    \n",
+      " WindDir9am    | W      \n",
+      " WindDir3pm    | WSW    \n",
+      " RainToday     | No     \n",
+      " RainTomorrow  | No     \n",
+      "only showing top 3 rows\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "# identity the numeric columns and string columns\n",
+    "\n",
+    "stringColumns=[\"WindGustDir\",\"WindDir9am\",\"WindDir3pm\",\"RainToday\",\"RainTomorrow\"]\n",
+    "numericaColumns=[i for i in dropNmae if i not in stringColumns]\n",
+    "#fill the miss Value\n",
+    "\n",
+    "#create a list to gather fill NA columns\n",
+    "ne_rain=rain_dataset_string.select(\"RainTomorrow\").collect()\n",
+    "save=[[] for ii in np.arange(0,len(ne_rain),1)]\n",
+    "#Numeric colums\n",
+    "for i in numericaColumns:\n",
+    "    #get the avage value \n",
+    "    avg_value=rain_dataset_string.filter(col(i)!=\"NA\").select(avg(i)).collect()[0][0]   \n",
+    "    #use the UDF and regural expression to replace the NA value \n",
+    "    replaceNA=UserDefinedFunction(lambda x :re.sub(\"NA\",str(avg_value),x),StringType())\n",
+    "    #fillNaColums is that the columns has fill the avg value \n",
+    "    fillNaColums=rain_dataset_string.select(replaceNA(i)).collect()\n",
+    "    #add the columns to the save list\n",
+    "    [save[ii].append(fillNaColums[ii][0]) for ii in np.arange(0,len(fillNaColums),1)]\n",
+    "#String columns\n",
+    "for i in stringColumns:\n",
+    "    # get the top one \n",
+    "    topOne=rain_dataset_string.filter(col(i)!=\"NA\").groupby(i).count().sort(\"count\",ascending = False).first()[0][0]\n",
+    "    #use the UDF and regural expression to replace the NA value \n",
+    "    replaceNA=UserDefinedFunction(lambda x :re.sub(\"NA\",str(topOne),x),StringType())\n",
+    "    #fillNaColums is that the columns has fill the top value \n",
+    "    fillNaColums=rain_dataset_string.select(replaceNA(i)).collect()\n",
+    "    #add the columns to the save list\n",
+    "    [save[ii].append(fillNaColums[ii][0]) for ii in np.arange(0,len(fillNaColums),1)]\n",
+    "\n",
+    "\n",
+    "\n",
+    "\n",
+    "newColumnName=numericaColumns+stringColumns\n",
+    "\n",
+    "new_df=spark.createDataFrame(save,schema=newColumnName)\n",
+    "new_df.show(3,False,True)\n",
+    "new_name=new_df.columns\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### step 06: Data transformation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "root\n",
+      " |-- MinTemp: string (nullable = true)\n",
+      " |-- MaxTemp: string (nullable = true)\n",
+      " |-- Rainfall: string (nullable = true)\n",
+      " |-- WindGustSpeed: string (nullable = true)\n",
+      " |-- WindSpeed9am: string (nullable = true)\n",
+      " |-- WindSpeed3pm: string (nullable = true)\n",
+      " |-- Humidity9am: string (nullable = true)\n",
+      " |-- Humidity3pm: string (nullable = true)\n",
+      " |-- Pressure9am: string (nullable = true)\n",
+      " |-- Pressure3pm: string (nullable = true)\n",
+      " |-- WindGustDir: string (nullable = true)\n",
+      " |-- WindDir9am: string (nullable = true)\n",
+      " |-- WindDir3pm: string (nullable = true)\n",
+      " |-- RainToday: string (nullable = true)\n",
+      " |-- RainTomorrow: string (nullable = true)\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "new_df.printSchema()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "root\n",
+      " |-- MinTemp: double (nullable = true)\n",
+      " |-- MaxTemp: double (nullable = true)\n",
+      " |-- Rainfall: double (nullable = true)\n",
+      " |-- WindGustSpeed: double (nullable = true)\n",
+      " |-- WindSpeed9am: double (nullable = true)\n",
+      " |-- WindSpeed3pm: double (nullable = true)\n",
+      " |-- Humidity9am: double (nullable = true)\n",
+      " |-- Humidity3pm: double (nullable = true)\n",
+      " |-- Pressure9am: double (nullable = true)\n",
+      " |-- Pressure3pm: double (nullable = true)\n",
+      " |-- WindGustDir: string (nullable = true)\n",
+      " |-- WindDir9am: string (nullable = true)\n",
+      " |-- WindDir3pm: string (nullable = true)\n",
+      " |-- RainToday: string (nullable = true)\n",
+      " |-- RainTomorrow: string (nullable = true)\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "from pyspark.sql.types import * \n",
+    "# transfor the datype all numerical value columns transfer the datatype to double\n",
+    "for i in numericaColumns:\n",
+    "    new_df=new_df.withColumn(i,col(i).cast(DoubleType()))\n",
+    "\n",
+    "new_df.printSchema()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from pyspark.ml.feature import StringIndexer,VectorAssembler\n",
+    "from pyspark.ml.classification import LogisticRegression,DecisionTreeClassifier,RandomForestClassifier,GBTClassifier\n",
+    "from pyspark.ml.tuning import ParamGridBuilder,CrossValidator\n",
+    "from pyspark.ml import Pipeline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#remove the RainTomorrow columns\n",
+    "stringColumns=[\"WindGustDir\",\"WindDir9am\",\"WindDir3pm\",\"RainToday\",\"RainTomorrow\"]\n",
+    "stringColumns.remove(\"RainTomorrow\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "RainTomorrow is label columns,so I decide to keep this column,later i will directly convert it to label"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "root\n",
+      " |-- MinTemp: double (nullable = true)\n",
+      " |-- MaxTemp: double (nullable = true)\n",
+      " |-- Rainfall: double (nullable = true)\n",
+      " |-- WindGustSpeed: double (nullable = true)\n",
+      " |-- WindSpeed9am: double (nullable = true)\n",
+      " |-- WindSpeed3pm: double (nullable = true)\n",
+      " |-- Humidity9am: double (nullable = true)\n",
+      " |-- Humidity3pm: double (nullable = true)\n",
+      " |-- Pressure9am: double (nullable = true)\n",
+      " |-- Pressure3pm: double (nullable = true)\n",
+      " |-- WindGustDirfeature: double (nullable = false)\n",
+      " |-- WindDir9amfeature: double (nullable = false)\n",
+      " |-- WindDir3pmfeature: double (nullable = false)\n",
+      " |-- RainTodayfeature: double (nullable = false)\n",
+      " |-- label: double (nullable = false)\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "# convert String columns to number use the StringIndexer\n",
+    "# newStringColumnName for save the feature columns name\n",
+    "newStringColumnName=[]\n",
+    "stage=[]\n",
+    "for i in stringColumns:\n",
+    "    stringIndexConvert=StringIndexer(inputCol=i,outputCol=i +\"feature\")\n",
+    "    newStringColumnName.append(i+\"feature\")\n",
+    "    stage.append(stringIndexConvert)\n",
+    "# convert the RainTomorrow columns to label \n",
+    "labelStringIndex=StringIndexer(inputCol=\"RainTomorrow\",outputCol=\"label\")\n",
+    "stage.append(labelStringIndex)\n",
+    "# apply the pipline for geting the features\n",
+    "pipeline=Pipeline(stages=stage)\n",
+    "pip_model=pipeline.fit(new_df)\n",
+    "dfFeature=pip_model.transform(new_df)\n",
+    "#drop the original string columns\n",
+    "featureDataset=dfFeature.drop(*stringColumns,\"RainTomorrow\")\n",
+    "# show the featureDataset schema for checking the dataset\n",
+    "featureDataset.printSchema()\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### step 07:Create the feature vector and divide the dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-RECORD 0------------------------------------------------------------------------------------\n",
+      " MinTemp            | 13.4                                                                   \n",
+      " MaxTemp            | 22.9                                                                   \n",
+      " Rainfall           | 0.6                                                                    \n",
+      " WindGustSpeed      | 44.0                                                                   \n",
+      " WindSpeed9am       | 20.0                                                                   \n",
+      " WindSpeed3pm       | 24.0                                                                   \n",
+      " Humidity9am        | 71.0                                                                   \n",
+      " Humidity3pm        | 22.0                                                                   \n",
+      " Pressure9am        | 1007.7                                                                 \n",
+      " Pressure3pm        | 1007.1                                                                 \n",
+      " WindGustDirfeature | 0.0                                                                    \n",
+      " WindDir9amfeature  | 6.0                                                                    \n",
+      " WindDir3pmfeature  | 7.0                                                                    \n",
+      " RainTodayfeature   | 0.0                                                                    \n",
+      " label              | 0.0                                                                    \n",
+      " features           | [13.4,22.9,0.6,44.0,20.0,24.0,71.0,22.0,1007.7,1007.1,0.0,6.0,7.0,0.0] \n",
+      "-RECORD 1------------------------------------------------------------------------------------\n",
+      " MinTemp            | 7.4                                                                    \n",
+      " MaxTemp            | 25.1                                                                   \n",
+      " Rainfall           | 0.0                                                                    \n",
+      " WindGustSpeed      | 44.0                                                                   \n",
+      " WindSpeed9am       | 4.0                                                                    \n",
+      " WindSpeed3pm       | 22.0                                                                   \n",
+      " Humidity9am        | 44.0                                                                   \n",
+      " Humidity3pm        | 25.0                                                                   \n",
+      " Pressure9am        | 1010.6                                                                 \n",
+      " Pressure3pm        | 1007.8                                                                 \n",
+      " WindGustDirfeature | 9.0                                                                    \n",
+      " WindDir9amfeature  | 9.0                                                                    \n",
+      " WindDir3pmfeature  | 3.0                                                                    \n",
+      " RainTodayfeature   | 0.0                                                                    \n",
+      " label              | 0.0                                                                    \n",
+      " features           | [7.4,25.1,0.0,44.0,4.0,22.0,44.0,25.0,1010.6,1007.8,9.0,9.0,3.0,0.0]   \n",
+      "-RECORD 2------------------------------------------------------------------------------------\n",
+      " MinTemp            | 12.9                                                                   \n",
+      " MaxTemp            | 25.7                                                                   \n",
+      " Rainfall           | 0.0                                                                    \n",
+      " WindGustSpeed      | 46.0                                                                   \n",
+      " WindSpeed9am       | 19.0                                                                   \n",
+      " WindSpeed3pm       | 26.0                                                                   \n",
+      " Humidity9am        | 38.0                                                                   \n",
+      " Humidity3pm        | 30.0                                                                   \n",
+      " Pressure9am        | 1007.6                                                                 \n",
+      " Pressure3pm        | 1008.7                                                                 \n",
+      " WindGustDirfeature | 6.0                                                                    \n",
+      " WindDir9amfeature  | 6.0                                                                    \n",
+      " WindDir3pmfeature  | 3.0                                                                    \n",
+      " RainTodayfeature   | 0.0                                                                    \n",
+      " label              | 0.0                                                                    \n",
+      " features           | [12.9,25.7,0.0,46.0,19.0,26.0,38.0,30.0,1007.6,1008.7,6.0,6.0,3.0,0.0] \n",
+      "only showing top 3 rows\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "#gather all of features togather \n",
+    "# label 0 is no rain, label 1 is rain day\n",
+    "assemblerInputs=numericaColumns+newStringColumnName\n",
+    "assemberNumerical= VectorAssembler(inputCols=assemblerInputs,outputCol=\"features\")\n",
+    "finaldataset=assemberNumerical.transform(featureDataset)\n",
+    "finaldataset.show(3,False,True)\n",
+    "train,test = finaldataset.randomSplit([0.7, 0.3], seed = 100)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Apply Machine Learning Algorthms"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Step 08: apply machine learning classification algorithms on the dataset and compare their accuracy \n",
+    "#### Plot the accuracy as bar graph"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from pyspark.ml.classification import DecisionTreeClassifier,LogisticRegression\n",
+    "from pyspark.ml.classification import GBTClassifier,RandomForestClassifier\n",
+    "from pyspark.ml.evaluation import MulticlassClassificationEvaluator"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "DecisionTreeClassifier accuracy is 0.8350658840723193\n",
+      "DecisionTreeClassifier Test Error = 0.164934 \n",
+      "+----------------------------------------+\n",
+      "|probability                             |\n",
+      "+----------------------------------------+\n",
+      "|[0.9200359013963973,0.07996409860360267]|\n",
+      "|[0.8088689210508265,0.19113107894917347]|\n",
+      "|[0.9200359013963973,0.07996409860360267]|\n",
+      "|[0.9200359013963973,0.07996409860360267]|\n",
+      "|[0.9200359013963973,0.07996409860360267]|\n",
+      "+----------------------------------------+\n",
+      "only showing top 5 rows\n",
+      "\n",
+      "probability right column is rainday probability for each record\n"
+     ]
+    }
+   ],
+   "source": [
+    "#get the accuracy of classification model,such as:\n",
+    "#DecisionTreeClassifier,RandomForestClassifier,LogisticRegression,GBTClassifier\n",
+    "# ceate a list for saving the accuracy \n",
+    "saveAccuracy=[]\n",
+    "#create the evaluator\n",
+    "evaluator = MulticlassClassificationEvaluator(\\\n",
+    "\n",
+    "labelCol=\"label\", predictionCol=\"prediction\",\\\n",
+    "\n",
+    "metricName=\"accuracy\")\n",
+    "model=[DecisionTreeClassifier,RandomForestClassifier,LogisticRegression,GBTClassifier]\n",
+    "#DecisionTreeClassifier\n",
+    "classficationModel = DecisionTreeClassifier()\n",
+    "modelDt = classficationModel.fit(train)\n",
+    "predictionsDt = modelDt.transform(test)\n",
+    "accuracy = evaluator.evaluate(predictionsDt)\n",
+    "saveAccuracy.append(accuracy)\n",
+    "\n",
+    "print(\"DecisionTreeClassifier accuracy is \"+str(accuracy))\n",
+    "print(\"DecisionTreeClassifier Test Error = %g \" % (1.0 - accuracy))\n",
+    "predictionsDt.select(\"probability\").show(5,False)\n",
+    "print(\"probability right column is rainday probability for each record\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "rain day probability is 1 no-rain day probability is 0\n",
+      "RandomForestClassifier accuracy is 0.8345001532187728\n",
+      "RandomForestClassifier Test Error = 0.1655 \n",
+      "+----------------------------------------+\n",
+      "|probability                             |\n",
+      "+----------------------------------------+\n",
+      "|[0.8891218876640495,0.11087811233595053]|\n",
+      "|[0.861477510615168,0.13852248938483205] |\n",
+      "|[0.8891218876640495,0.11087811233595053]|\n",
+      "|[0.6979153463018017,0.30208465369819826]|\n",
+      "|[0.8659449609568501,0.13405503904314997]|\n",
+      "+----------------------------------------+\n",
+      "only showing top 5 rows\n",
+      "\n",
+      "probability right column is rainday probability for each record\n"
+     ]
+    }
+   ],
+   "source": [
+    "#RandomForestClassifier\n",
+    "classficationModel = RandomForestClassifier()\n",
+    "modelRf = classficationModel.fit(train)\n",
+    "predictionsRF = modelRf.transform(test)\n",
+    "accuracy = evaluator.evaluate(predictionsRF)\n",
+    "saveAccuracy.append(accuracy)\n",
+    "print(\"rain day probability is 1 no-rain day probability is 0\")\n",
+    "print(\"RandomForestClassifier accuracy is \"+str(accuracy))\n",
+    "print(\"RandomForestClassifier Test Error = %g \" % (1.0 - accuracy))\n",
+    "predictionsRF.select(\"probability\").show(5,False)\n",
+    "print(\"probability right column is rainday probability for each record\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "rain day probability is 1 no-rain day probability is 0\n",
+      "LogisticRegression accuracy is 0.8380595431723358\n",
+      "LogisticRegression Test Error = 0.16194 \n",
+      "+-----------------------------------------+\n",
+      "|probability                              |\n",
+      "+-----------------------------------------+\n",
+      "|[0.9832964439344998,0.016703556065500207]|\n",
+      "|[0.9328128911577359,0.06718710884226405] |\n",
+      "|[0.969495302483726,0.030504697516273924] |\n",
+      "|[0.856691606238049,0.1433083937619511]   |\n",
+      "|[0.9113902798231467,0.0886097201768533]  |\n",
+      "+-----------------------------------------+\n",
+      "only showing top 5 rows\n",
+      "\n",
+      "probability right column is rainday probability for each record\n"
+     ]
+    }
+   ],
+   "source": [
+    "#LogisticRegression\n",
+    "classficationModel = LogisticRegression()\n",
+    "modelLr = classficationModel.fit(train)\n",
+    "predictionsLr = modelLr.transform(test)\n",
+    "accuracy = evaluator.evaluate(predictionsLr)\n",
+    "saveAccuracy.append(accuracy)\n",
+    "print(\"rain day probability is 1 no-rain day probability is 0\")\n",
+    "print(\"LogisticRegression accuracy is \"+str(accuracy))\n",
+    "print(\"LogisticRegression Test Error = %g \" % (1.0 - accuracy))\n",
+    "predictionsLr.select(\"probability\").show(5,False)\n",
+    "print(\"probability right column is rainday probability for each record\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "rain day probability is 1 no-rain day probability is 0\n",
+      "GBTClassifier accuracy is 0.8431746929731514\n",
+      "GBTClassifier Test Error = 0.156825 \n",
+      "+-----------------------------------------+\n",
+      "|probability                              |\n",
+      "+-----------------------------------------+\n",
+      "|[0.9445762723956882,0.0554237276043118]  |\n",
+      "|[0.9213847065276578,0.0786152934723422]  |\n",
+      "|[0.9437312511394386,0.056268748860561435]|\n",
+      "|[0.5760119889089628,0.42398801109103723] |\n",
+      "|[0.920731856297735,0.07926814370226498]  |\n",
+      "+-----------------------------------------+\n",
+      "only showing top 5 rows\n",
+      "\n",
+      "probability right column is rainday probability for each record\n"
+     ]
+    }
+   ],
+   "source": [
+    "#GBTClassifier\n",
+    "classficationModel = GBTClassifier()\n",
+    "modelGb = classficationModel.fit(train)\n",
+    "predictionsGb = modelGb.transform(test)\n",
+    "accuracy = evaluator.evaluate(predictionsGb)\n",
+    "saveAccuracy.append(accuracy)\n",
+    "\n",
+    "print(\"rain day probability is 1 no-rain day probability is 0\")\n",
+    "print(\"GBTClassifier accuracy is \"+str(accuracy))\n",
+    "print(\"GBTClassifier Test Error = %g \" % (1.0 - accuracy))\n",
+    "predictionsGb.select(\"probability\").show(5,False)\n",
+    "print(\"probability right column is rainday probability for each record\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "([0, 1, 2, 3], <a list of 4 Text xticklabel objects>)"
+      ]
+     },
+     "execution_count": 33,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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EdFRCQARER2VABAR0VEJABERHZUAEBHRUQkAEREdlQAQEdFRCQARER2VABAR0VEJABERHZUAEBHRUQkAEREdlQAQEdFRCQARER2VABAR0VEJABERHZUAEBHRUQkAEREdlQAQEdFRCQARER2VABAR0VHDCgCStpR0naTrJR06xPmVJF0o6TJJV0qa2o6vJ+ny9u8KSTv0vGdpSWdK+rWkayW9ZOR+rYiImJ+F53eBpEnACcArgVnAJZLOtn1Nz2XvAabb/rSkNYDzgJWBq4EptudKegZwhaRzbM8FPgl8x/aOkhYFFhvR3ywiIh7RcFoA6wHX277R9gPA6cB2g64xsGT7eSngDgDb97XKHmByuw5JSwEvA77QrnvA9t2P5ReJiIgFM5wAsDxwW8/rWe1YryOBXSTNop7+9xs4IWl9STOBq4C9WkBYBZgNfLF1G31e0pMe/a8RERELaqQGgXcCTrG9AjAVOFXSQgC2L7a9JrAucJikyVTX0zrAp22vDdwLPGRsAUDSnpJmSJoxe/bsESpuREQMJwDcDqzY83qFdqzX7sB0ANsXUd09y/ZeYPtaYA7wAqoVMcv2xe30mVRAeAjbJ9meYnvKcsstN4ziRkTEcAwnAFwCrCpplTZYOw04e9A1twKbA0hanQoAs9t7Fm7HnwWsBtxs+/fAbZKe396/OXANERExauY7C6jN4NkXOB+YBJxse6ako4AZts8GDgI+J+lAaqB3N9uWtBFwqKQHgXnAPrb/2D56P+DLLajcCLxlxH+7iIh4WPMNAAC2z6MGd3uPHdHz8zXAhkO871Tg1If5zMuBKQtS2IiIGDlZCRwR0VEJABERHZUAEBHRUQkAEREdlQAQEdFRCQARER2VABAR0VEJABERHZUAEBHRUQkAEREdlQAQEdFRCQARER01rGRwE8HKh57b7yL01c3HbN3vIkTEGJMWQERERyUARER0VAJARERHJQBERHRUAkBEREclAEREdFQCQERERyUARER0VAJARERHdWYlcDw2WUmdldQx8aQFEBHRUQkAEREdlQAQEdFRCQARER2VABAR0VHDCgCStpR0naTrJR06xPmVJF0o6TJJV0qa2o6vJ+ny9u8KSTsMet+k9p5vjcyvExERwzXfaaCSJgEnAK8EZgGXSDrb9jU9l70HmG7705LWAM4DVgauBqbYnivpGcAVks6x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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "#plot the accuracy in a bar chart \n",
+    "import matplotlib.pylab as plt\n",
+    "modelName=[\"DecisionTreeClassifier\",\"RandomForestClassifier\",\"LogisticRegression\",\"GBTClassifier\"]\n",
+    "plt.bar(modelName,saveAccuracy)\n",
+    "# set the range of Y for clearly display the accuracy\n",
+    "plt.ylim(0.833,0.845)\n",
+    "plt.xticks(rotation=45)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "from this bar chart, i find that GBTClassifier has highest the accuracy in these Classifier model. The logistic Regression has the second highest accuracy.As for the Decision Tree and RandomForest, that have similar accuracy."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### step 09: Calculate the confusion matrix and find the preceision, recall, and F1 score of each classification algorithm. Explain how the accuracy of the predication can be improved?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "the confusion matrix should like this #[TN,FP]\n",
+    "                             #[FN,TP]\n",
+    "                             the postiove is 1 \n",
+    "                             the negative is 0"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "so I would use the formula  Precision = TP/(TP+FP) Precision means that measures the % of the correct classification from the predicted.\n",
+    "Recall= TP/(TP+FN)  recall means that measures the % of the corret classification from the overall\n",
+    "      F1=2*(Precision * Recall)/(precision +Recall) F1 means that this model is stable or not. if recall is a high rate, the F1 will be a high number.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def evaluatorCalculate (matrix):\n",
+    "    TP=matrix[1,1]\n",
+    "    FP=matrix[0,1]\n",
+    "    FN=matrix[1,0]\n",
+    "    TN=matrix[0,0]\n",
+    "    precision=TP/(TP+FP)\n",
+    "    Recall= TP/(TP+FN)\n",
+    "    F1=2*(precision * Recall)/(precision +Recall)\n",
+    "    return precision,Recall,F1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "DenseMatrix([[31799.,  1100.],\n",
+      "             [ 5897.,  3627.]])\n",
+      "Decision Tree Model\n",
+      "precision0.767294266976941\n",
+      "Recall0.38082738345233097\n",
+      "F1  0.5090169110939584\n"
+     ]
+    }
+   ],
+   "source": [
+    "from pyspark.mllib.evaluation import MulticlassMetrics\n",
+    "\n",
+    "#Decision Tree Model\n",
+    "confusMDr=predictionsDt.select(\"prediction\",\"label\").rdd\n",
+    "drMetrics=MulticlassMetrics(confusMDr)\n",
+    "drCm=drMetrics.confusionMatrix()\n",
+    "print(drCm)\n",
+    "precision,Recall,F1=evaluatorCalculate(drCm)\n",
+    "print(\"Decision Tree Model\")\n",
+    "print(\"precision\"+str(precision))\n",
+    "print(\"Recall\"+str(Recall))\n",
+    "print(\"F1  \"+str(F1))\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "DenseMatrix([[32009.,   890.],\n",
+      "             [ 6131.,  3393.]])\n",
+      "Random Forest Model\n",
+      "precision0.7922017277609152\n",
+      "Recall0.35625787484250315\n",
+      "F1 0.4914898240023176\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Random Forest Model\n",
+    "\n",
+    "confusMRF=predictionsRF.select(\"prediction\",\"label\").rdd\n",
+    "rfMetrics=MulticlassMetrics(confusMRF)\n",
+    "rfCm=rfMetrics.confusionMatrix()\n",
+    "print(rfCm)\n",
+    "precision,Recall,F1=evaluatorCalculate(rfCm)\n",
+    "print(\"Random Forest Model\")\n",
+    "print(\"precision\"+str(precision))\n",
+    "print(\"Recall\"+str(Recall))\n",
+    "print(\"F1 \"+str(F1))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "DenseMatrix([[32009.,   890.],\n",
+      "             [ 6131.,  3393.]])\n",
+      "Logistic Regression Model\n",
+      "precision0.7183352449614944\n",
+      "Recall0.4603107937841243\n",
+      "F1 0.5610801817367376\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Logistic Regression Model\n",
+    "confusMLR=predictionsLr.select(\"prediction\",\"label\").rdd\n",
+    "lrMetrics=MulticlassMetrics(confusMLR)\n",
+    "lrCm=lrMetrics.confusionMatrix()\n",
+    "print(rfCm)\n",
+    "precision,Recall,F1=evaluatorCalculate(lrCm)\n",
+    "print(\"Logistic Regression Model\")\n",
+    "print(\"precision\"+str(precision))\n",
+    "print(\"Recall\"+str(Recall))\n",
+    "print(\"F1 \"+str(F1))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "DenseMatrix([[32009.,   890.],\n",
+      "             [ 6131.,  3393.]])\n",
+      "GBTClassifier Model\n",
+      "precision0.7361408126336568\n",
+      "Recall0.46986560268794625\n",
+      "F1 0.5736076395564956\n"
+     ]
+    }
+   ],
+   "source": [
+    "# #GBTClassifier Model\n",
+    "confusMGB=predictionsGb.select(\"prediction\",\"label\").rdd\n",
+    "gbMetrics=MulticlassMetrics(confusMGB)\n",
+    "gbCm=gbMetrics.confusionMatrix()\n",
+    "print(rfCm)\n",
+    "precision,Recall,F1=evaluatorCalculate(gbCm)\n",
+    "print(\"GBTClassifier Model\")\n",
+    "print(\"precision\"+str(precision))\n",
+    "print(\"Recall\"+str(Recall))\n",
+    "print(\"F1 \"+str(F1))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "According to these results, I find that these model hardly predict that tomorrow is a rain day. it is beacause that the recall is so low. In other words, the FN is too much, the model cannot give a good prediction. \n",
+    "Prehaps, there are some reasons. like underfitting, lake of dataset and unsuitable parameter. \n",
+    "So, we can use the CrossValidation to find the suitable parameter. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In my opion, adding  the dataset is a good way. The next i would explain this way."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 157,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# import dataset\n",
+    "rain_dataset_improv=spark.read.csv(\"weatherAUS.csv\",header =True,inferSchema =True,nullValue=\"NA\") "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 160,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "root\n",
+      " |-- Date: timestamp (nullable = true)\n",
+      " |-- Location: string (nullable = true)\n",
+      " |-- MinTemp: double (nullable = true)\n",
+      " |-- MaxTemp: double (nullable = true)\n",
+      " |-- Rainfall: double (nullable = true)\n",
+      " |-- Evaporation: double (nullable = true)\n",
+      " |-- Sunshine: double (nullable = true)\n",
+      " |-- WindGustDir: string (nullable = true)\n",
+      " |-- WindGustSpeed: integer (nullable = true)\n",
+      " |-- WindDir9am: string (nullable = true)\n",
+      " |-- WindDir3pm: string (nullable = true)\n",
+      " |-- WindSpeed9am: integer (nullable = true)\n",
+      " |-- WindSpeed3pm: integer (nullable = true)\n",
+      " |-- Humidity9am: integer (nullable = true)\n",
+      " |-- Humidity3pm: integer (nullable = true)\n",
+      " |-- Pressure9am: double (nullable = true)\n",
+      " |-- Pressure3pm: double (nullable = true)\n",
+      " |-- Cloud9am: integer (nullable = true)\n",
+      " |-- Cloud3pm: integer (nullable = true)\n",
+      " |-- Temp9am: double (nullable = true)\n",
+      " |-- Temp3pm: double (nullable = true)\n",
+      " |-- RainToday: string (nullable = true)\n",
+      " |-- RainTomorrow: string (nullable = true)\n",
+      "\n",
+      "Date have 0 missing value \n",
+      "Location have 0 missing value \n",
+      "MinTemp have 637 missing value \n",
+      "MaxTemp have 322 missing value \n",
+      "Rainfall have 1406 missing value \n",
+      "Evaporation have 60843 missing value \n",
+      "Sunshine have 67816 missing value \n",
+      "WindGustDir have 9330 missing value \n",
+      "WindGustSpeed have 9270 missing value \n",
+      "WindDir9am have 10013 missing value \n",
+      "WindDir3pm have 3778 missing value \n",
+      "WindSpeed9am have 1348 missing value \n",
+      "WindSpeed3pm have 2630 missing value \n",
+      "Humidity9am have 1774 missing value \n",
+      "Humidity3pm have 3610 missing value \n",
+      "Pressure9am have 14014 missing value \n",
+      "Pressure3pm have 13981 missing value \n",
+      "Cloud9am have 53657 missing value \n",
+      "Cloud3pm have 57094 missing value \n",
+      "Temp9am have 904 missing value \n",
+      "Temp3pm have 2726 missing value \n",
+      "RainToday have 1406 missing value \n",
+      "RainTomorrow have 0 missing value \n"
+     ]
+    }
+   ],
+   "source": [
+    "columnName=rain_dataset_improv.columns\n",
+    "rain_dataset_improv.printSchema()\n",
+    "\n",
+    "for i in columnName:\n",
+    "    counts=rain_dataset_improv.select(isnull(i).alias(\"jude\")).filter(col(\"jude\")== True).count()\n",
+    "    print(str(i)+\" have \"+str(counts)+\" missing value \")\n",
+    "    #[Evaporation,Sunshine]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Here, we can see some columns lack of data over the 10,000 , so  i would delete these columns like Sunshine,Evaporation,WindDir9am,Pressure9am,Pressure3pm,Cloud9am,Cloud3pm.\n",
+    "In addition, i would fill the value for missing value based on location and date. RainTorrow still is label."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
